@@ -54,10 +54,15 @@ func start() error {
 	fwc := make(chan CertificateStatusResult)
 
 	cw = NewConsoleWriter(&wg, cwc)
-	fw = NewFileWriter(&wg, fwc, resultFile)
+	if len(targetHost) == 0 {
+		fw = NewFileWriter(&wg, fwc, resultFile)
+	}
+
 	for r := range res {
 		cwc <- r
-		fwc <- r
+		if len(targetHost) == 0 {
+			fwc <- r
+		}
 	}
 
 	close(cwc)

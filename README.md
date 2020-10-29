@@ -53,7 +53,7 @@ Output
    VALID    9to5mac.com:443 (9to5mac.com | 57 days | 2020-12-24 23:04:46 +0000 UTC)
    VALID    thenewstack.io:443 (*.thenewstack.io | 68 days | 2021-01-05 12:59:44 +0000 UTC)
    VALID    9to5google.com:443 (9to5google.com | 53 days | 2020-12-21 01:52:52 +0000 UTC)
-   EXPRIRED expired.badssl.com:443 (*.badssl.com | -2026 days | 2015-04-12 23:59:59 +0000 UTC)
+   EXPIRED expired.badssl.com:443 (*.badssl.com | -2026 days | 2015-04-12 23:59:59 +0000 UTC)
 ```
 ### Result Format
 

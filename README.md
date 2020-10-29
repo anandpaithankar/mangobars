@@ -31,7 +31,6 @@ Example:
   
 ```
 ## Examples
----
 
 ### Checking single host
 ```

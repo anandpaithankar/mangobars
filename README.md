@@ -1,6 +1,6 @@
 # mangobars
----
-Bulk check SSL certificate expiration status for the given servers. The list of servers can be specified
+
+Fast bulk check SSL certificate expiration status for the given servers. The list of servers can be specified
 via CSV file for bulk verification or single host
 can be specified on the command line. The colorized status is presented on the Console and CSV file (for bulk check).
 
@@ -31,7 +31,6 @@ Example:
   
 ```
 ## Examples
----
 
 ### Checking single host
 ```

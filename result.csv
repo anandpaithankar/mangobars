@@ -1,0 +1,11 @@
+facebook.com,443,*.facebook.com,Valid,42,2020-12-10 12:00:00 +0000 UTC
+stackoverflow.com,443,*.stackexchange.com,Valid,66,2021-01-03 13:02:44 +0000 UTC
+cloudflare.com,443,cloudflare.com,Valid,248,2021-07-04 12:00:00 +0000 UTC
+youtube.com,443,*.google.com,Valid,61,2020-12-29 06:35:57 +0000 UTC
+microsoft.com,443,microsoft.com,Valid,315,2021-09-09 00:53:57 +0000 UTC
+www.wayfair.com,443,www.wayfair.com,Valid,286,2021-08-11 12:00:00 +0000 UTC
+instagram.com,443,*.instagram.com,Valid,83,2021-01-19 23:59:59 +0000 UTC
+expired.badssl.com,443,*.badssl.com,Expired,-2026,2015-04-12 23:59:59 +0000 UTC
+google.com,443,*.google.com,Valid,61,2020-12-29 06:35:57 +0000 UTC
+stripe.com, 443,stripe.com,Valid,97,2021-02-03 12:00:00 +0000 UTC
+amazon.com,443,*.peg.a2z.com,Valid,117,2021-02-23 12:00:00 +0000 UTC

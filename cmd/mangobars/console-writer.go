@@ -72,7 +72,7 @@ func (t *ConsoleWriter) printValid(s string) {
 
 func (t *ConsoleWriter) printExpired(s string) {
 	pfx := pterm.Error.Prefix
-	pfx.Text = "EXPRIRED "
+	pfx.Text = "EXPIRED "
 	pterm.Error.WithPrefix(pfx).Println(s)
 }
 

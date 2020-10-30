@@ -55,6 +55,20 @@ Output
    VALID    9to5google.com:443 (9to5google.com | 53 days | 2020-12-21 01:52:52 +0000 UTC)
    EXPIRED expired.badssl.com:443 (*.badssl.com | -2026 days | 2015-04-12 23:59:59 +0000 UTC)
 ```
+### CSV Format
+A host information in the CSV file is expecting the following format.
+
+```
+server-host-name, ssl-port
+```
+
+### Example
+```
+amazon.com,443
+google.com,443
+cloudflare.com,443
+microsoft.com,443
+```
 ### Result Format
 
 1. First field indicates the SSL certificate status (`EXPIRED`, `VALID`, `WARN`, `ALERT`). 

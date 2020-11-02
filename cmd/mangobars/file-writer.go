@@ -16,15 +16,23 @@ type FileWriter struct {
 }
 
 // NewFileWriter ... Creates a new file writer
-func NewFileWriter(wg *sync.WaitGroup, fwc chan CertificateStatusResult, name string) *FileWriter {
+func NewFileWriter(wg *sync.WaitGroup, fwc chan CertificateStatusResult, name string) (*FileWriter, func()) {
 	f, err := os.Create(name)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error creating a %s file", name)
-		return nil
+		return nil, func() {}
 	}
+
 	fw := &FileWriter{name: name, f: f, fwc: fwc, wg: wg}
 	go fw.run()
-	return fw
+	return fw, fw.release
+}
+
+// Close ... Close the file
+func (fw *FileWriter) release() {
+	if fw.f != nil {
+		fw.f.Close()
+	}
 }
 
 func (fw *FileWriter) run() {

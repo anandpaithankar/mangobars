@@ -52,10 +52,12 @@ func start() error {
 	var wg sync.WaitGroup
 	cwc := make(chan CertificateStatusResult)
 	fwc := make(chan CertificateStatusResult)
+	var releaseFile func()
 
 	cw = NewConsoleWriter(&wg, cwc)
 	if len(targetHost) == 0 {
-		fw = NewFileWriter(&wg, fwc, resultFile)
+		fw, releaseFile = NewFileWriter(&wg, fwc, resultFile)
+		defer releaseFile()
 	}
 
 	for r := range res {

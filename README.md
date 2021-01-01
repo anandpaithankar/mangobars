@@ -4,7 +4,8 @@ Fast bulk check SSL certificate expiration status for the given servers. The lis
 via CSV file for bulk verification or single host
 can be specified on the command line. The colorized status is presented on the Console and CSV file (for bulk check).
 
-![output](assets/screen.png)
+[![output](https://asciinema.org/a/SJ1NEmrcHpiZ0Dwj3uaG10oo9.svg)](https://asciinema.org/a/SJ1NEmrcHpiZ0Dwj3uaG10oo9)
+
 ## Usage
 
 ```

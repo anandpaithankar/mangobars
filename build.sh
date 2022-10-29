@@ -1,3 +1,3 @@
 #!/bin/sh
 
-go build -o bin/mangobars cmd/mangobars/*
+go build -o bin/mangobars cmd/mangobars/mangobars.go

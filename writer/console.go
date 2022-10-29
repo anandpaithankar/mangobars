@@ -1,21 +1,22 @@
-package main
+package writer
 
 import (
 	"fmt"
 	"strconv"
 	"sync"
 
+	"github.com/anandpaithankar/mangobars/ssl"
 	"github.com/pterm/pterm"
 )
 
 // ConsoleWriter ...
 type ConsoleWriter struct {
 	wg  *sync.WaitGroup
-	twc chan CertificateStatusResult
+	twc chan ssl.CertificateStatusResult
 }
 
 // NewConsoleWriter ... Creates a new console writer
-func NewConsoleWriter(wg *sync.WaitGroup, twc chan CertificateStatusResult) *ConsoleWriter {
+func NewConsoleWriter(wg *sync.WaitGroup, twc chan ssl.CertificateStatusResult) *ConsoleWriter {
 	this := &ConsoleWriter{twc: twc, wg: wg}
 	go this.run()
 	return this
@@ -36,10 +37,10 @@ func (t *ConsoleWriter) run() {
 	}
 }
 
-func (t *ConsoleWriter) colorWriter(r CertificateStatusResult) {
+func (t *ConsoleWriter) colorWriter(r ssl.CertificateStatusResult) {
 	defer t.wg.Done()
-	if r.err != nil {
-		s := fmt.Sprintf("%s:%s (%s)", r.host, r.port, r.err.Error())
+	if r.Err != nil {
+		s := fmt.Sprintf("%s:%s (%s)", r.Host, r.Port, r.Err.Error())
 		pfx := pterm.Error.Prefix
 		pfx.Text = "  ERROR  "
 		pterm.Error.WithPrefix(pfx).Println(s)
@@ -47,16 +48,16 @@ func (t *ConsoleWriter) colorWriter(r CertificateStatusResult) {
 
 	}
 
-	s := fmt.Sprintf("%s:%s (%s | %s days | %s)", r.host, r.port, r.subject, strconv.Itoa(r.days), r.notAfter.String())
+	s := fmt.Sprintf("%s:%s (%s | %s days | %s)", r.Host, r.Port, r.Subject, strconv.Itoa(r.Days), r.NotAfter.String())
 
-	switch r.status {
-	case valid:
+	switch r.Status {
+	case ssl.Valid:
 		t.printValid(s)
-	case expired:
+	case ssl.Expired:
 		t.printExpired(s)
-	case warn:
+	case ssl.Warn:
 		t.printWarn(s)
-	case alert:
+	case ssl.Alert:
 		t.printAlert(s)
 	}
 }

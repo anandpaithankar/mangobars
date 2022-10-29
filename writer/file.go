@@ -1,10 +1,12 @@
-package main
+package writer
 
 import (
 	"fmt"
 	"os"
 	"strconv"
 	"sync"
+
+	"github.com/anandpaithankar/mangobars/ssl"
 )
 
 // FileWriter ...
@@ -12,11 +14,11 @@ type FileWriter struct {
 	name string
 	f    *os.File
 	wg   *sync.WaitGroup
-	fwc  chan CertificateStatusResult
+	fwc  chan ssl.CertificateStatusResult
 }
 
 // NewFileWriter ... Creates a new file writer
-func NewFileWriter(wg *sync.WaitGroup, fwc chan CertificateStatusResult, name string) (*FileWriter, func()) {
+func NewFileWriter(wg *sync.WaitGroup, fwc chan ssl.CertificateStatusResult, name string) (*FileWriter, func()) {
 	f, err := os.Create(name)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error creating a %s file", name)
@@ -51,14 +53,14 @@ func (fw *FileWriter) run() {
 	}
 }
 
-func (fw *FileWriter) write(r CertificateStatusResult) {
+func (fw *FileWriter) write(r ssl.CertificateStatusResult) {
 	defer fw.wg.Done()
 	var s string
-	if r.err != nil {
-		s = fmt.Sprintf("%s,%s,%s\n", r.host, r.port, r.err.Error())
+	if r.Err != nil {
+		s = fmt.Sprintf("%s,%s,%s\n", r.Host, r.Port, r.Err.Error())
 
 	} else {
-		s = fmt.Sprintf("%s,%s,%s,%s,%s,%s\n", r.host, r.port, r.subject, string(r.status), strconv.Itoa(r.days), r.notAfter.String())
+		s = fmt.Sprintf("%s,%s,%s,%s,%s,%s\n", r.Host, r.Port, r.Subject, string(r.Status), strconv.Itoa(r.Days), r.NotAfter.String())
 	}
 	_, err := fw.f.WriteString(s)
 	if err != nil {

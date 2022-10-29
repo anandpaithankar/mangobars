@@ -9,6 +9,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/anandpaithankar/mangobars/ssl"
+	"github.com/anandpaithankar/mangobars/writer"
 	"github.com/gammazero/workerpool"
 )
 
@@ -30,8 +32,8 @@ var (
 	targetPort string
 	warnDays   int
 	alertDays  int
-	cw         *ConsoleWriter
-	fw         *FileWriter
+	cw         *writer.ConsoleWriter
+	fw         *writer.FileWriter
 )
 
 func main() {
@@ -50,13 +52,13 @@ func start() error {
 	}
 
 	var wg sync.WaitGroup
-	cwc := make(chan CertificateStatusResult)
-	fwc := make(chan CertificateStatusResult)
+	cwc := make(chan ssl.CertificateStatusResult)
+	fwc := make(chan ssl.CertificateStatusResult)
 	var releaseFile func()
 
-	cw = NewConsoleWriter(&wg, cwc)
+	cw = writer.NewConsoleWriter(&wg, cwc)
 	if len(targetHost) == 0 {
-		fw, releaseFile = NewFileWriter(&wg, fwc, resultFile)
+		fw, releaseFile = writer.NewFileWriter(&wg, fwc, resultFile)
 		defer releaseFile()
 	}
 
@@ -75,7 +77,7 @@ func start() error {
 
 func usage() {
 	flag.Usage = func() {
-		fmt.Println(usageString)
+		fmt.Printf(usageString)
 		flag.PrintDefaults()
 	}
 
@@ -88,7 +90,7 @@ func usage() {
 	flag.Parse()
 }
 
-func process() (r chan CertificateStatusResult, e error) {
+func process() (r chan ssl.CertificateStatusResult, e error) {
 	var reader io.Reader
 	var f *os.File
 	if len(targetHost) != 0 {
@@ -115,11 +117,11 @@ func process() (r chan CertificateStatusResult, e error) {
 	return dispatch(reader)
 }
 
-func dispatch(reader io.Reader) (chan CertificateStatusResult, error) {
-	results := make(chan CertificateStatusResult)
+func dispatch(reader io.Reader) (chan ssl.CertificateStatusResult, error) {
+	results := make(chan ssl.CertificateStatusResult)
 	wp := workerpool.New(maxSSLWorkers)
 	var wg sync.WaitGroup
-	sc := NewSSLConnect(warnDays, alertDays, &wg, wp, results)
+	sc := ssl.NewSSLConnect(warnDays, alertDays, &wg, wp, results)
 
 	cleanup := func() {
 		wg.Wait()
@@ -140,9 +142,9 @@ func dispatch(reader io.Reader) (chan CertificateStatusResult, error) {
 			cleanup()
 			return nil, err
 		}
-		task := SSLHost{
-			host: entry[0],
-			port: entry[1],
+		task := ssl.SSLHost{
+			Host: entry[0],
+			Port: entry[1],
 		}
 		wg.Add(1)
 		wp.Submit(func() {

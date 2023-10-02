@@ -16,7 +16,7 @@ import (
 
 const usageString = `Usage: mangobars [OPTION] [FILEPATH]
 Checks the expiration status for Server certificates.
-Example: 
+Example:
 	mangobars -w 20 -a 10 -i host.csv -o result.csv
 	mangobars -h amazon.com -p 443
 	mangobars -h amazon.com
@@ -35,13 +35,6 @@ var (
 	cw         *writer.ConsoleWriter
 	fw         *writer.FileWriter
 )
-
-func main() {
-	if err := start(); err != nil {
-		fmt.Fprintf(os.Stderr, "%+v", err)
-		os.Exit(1)
-	}
-}
 
 func start() error {
 	usage()
@@ -132,6 +125,7 @@ func dispatch(reader io.Reader) (chan ssl.CertificateStatusResult, error) {
 	r := csv.NewReader(reader)
 	r.Comma = ','
 	r.Comment = '#'
+	r.FieldsPerRecord = -1 // could have variable number of fields per record
 	for {
 		entry, err := r.Read()
 		if err == io.EOF {
@@ -142,9 +136,22 @@ func dispatch(reader io.Reader) (chan ssl.CertificateStatusResult, error) {
 			cleanup()
 			return nil, err
 		}
+
+		if len(entry) < 0 {
+			cleanup()
+			return nil, fmt.Errorf("number of fields in the record are less than expected length")
+		}
+
+		derivePort := func(record []string) string {
+			if len(record) == 2 && len(record[1]) != 0 {
+				return record[1]
+			}
+			return "443"
+		}
+
 		task := ssl.SSLHost{
 			Host: entry[0],
-			Port: entry[1],
+			Port: derivePort(entry),
 		}
 		wg.Add(1)
 		wp.Submit(func() {
@@ -154,4 +161,11 @@ func dispatch(reader io.Reader) (chan ssl.CertificateStatusResult, error) {
 
 	go cleanup()
 	return results, nil
+}
+
+func main() {
+	if err := start(); err != nil {
+		fmt.Fprintf(os.Stderr, "%+v", err)
+		os.Exit(1)
+	}
 }

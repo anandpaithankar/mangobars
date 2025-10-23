@@ -45,10 +45,16 @@ func (t *ConsoleWriter) colorWriter(r ssl.CertificateStatusResult) {
 		pfx.Text = "  ERROR  "
 		pterm.Error.WithPrefix(pfx).Println(s)
 		return
-
 	}
 
-	s := fmt.Sprintf("%s:%s (%s | %s days | %s)", r.Host, r.Port, r.Subject, strconv.Itoa(r.Days), r.NotAfter.String())
+	// Enhanced output with TLS version
+	tlsInfo := ""
+	if r.TLSVersion != "" {
+		tlsInfo = fmt.Sprintf(" | %s", r.TLSVersion)
+	}
+
+	s := fmt.Sprintf("%s:%s (%s | %s days%s | %s)",
+		r.Host, r.Port, r.Subject, strconv.Itoa(r.Days), tlsInfo, r.NotAfter.Format("2006-01-02 15:04:05 UTC"))
 
 	switch r.Status {
 	case ssl.Valid:

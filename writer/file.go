@@ -57,13 +57,18 @@ func (fw *FileWriter) write(r ssl.CertificateStatusResult) {
 	defer fw.wg.Done()
 	var s string
 	if r.Err != nil {
-		s = fmt.Sprintf("%s,%s,%s\n", r.Host, r.Port, r.Err.Error())
-
+		s = fmt.Sprintf("%s,%s,ERROR,%s\n", r.Host, r.Port, r.Err.Error())
 	} else {
-		s = fmt.Sprintf("%s,%s,%s,%s,%s,%s\n", r.Host, r.Port, r.Subject, string(r.Status), strconv.Itoa(r.Days), r.NotAfter.String())
+		tlsVersion := r.TLSVersion
+		if tlsVersion == "" {
+			tlsVersion = "Unknown"
+		}
+		s = fmt.Sprintf("%s,%s,%s,%s,%s,%s,%s\n",
+			r.Host, r.Port, r.Subject, string(r.Status),
+			strconv.Itoa(r.Days), tlsVersion, r.NotAfter.Format("2006-01-02 15:04:05 UTC"))
 	}
 	_, err := fw.f.WriteString(s)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error %v", err)
+		fmt.Fprintf(os.Stderr, "Error writing to file: %v\n", err)
 	}
 }

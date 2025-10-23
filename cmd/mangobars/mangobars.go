@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/anandpaithankar/mangobars/ssl"
 	"github.com/anandpaithankar/mangobars/writer"
@@ -16,25 +18,39 @@ import (
 
 const usageString = `Usage: mangobars [OPTION] [FILEPATH]
 Checks the expiration status for Server certificates.
-Example: 
+Example:
 	mangobars -w 20 -a 10 -i host.csv -o result.csv
 	mangobars -h amazon.com -p 443
 	mangobars -h amazon.com
 	mangobars -h amazon.com:443
 `
 
-const maxSSLWorkers = 10
-
 var (
-	inputFile  string
-	resultFile string
-	targetHost string
-	targetPort string
-	warnDays   int
-	alertDays  int
-	cw         *writer.ConsoleWriter
-	fw         *writer.FileWriter
+	inputFile     string
+	resultFile    string
+	targetHost    string
+	targetPort    string
+	warnDays      int
+	alertDays     int
+	maxWorkers    int
+	timeout       int
+	batchSize     int
+	cw            *writer.ConsoleWriter
+	fw            *writer.FileWriter
 )
+
+// calculateOptimalWorkers determines the optimal number of workers based on system resources
+func calculateOptimalWorkers() int {
+	numCPU := runtime.NumCPU()
+	optimal := numCPU * 2
+	if optimal < 5 {
+		return 5
+	}
+	if optimal > 50 {
+		return 50
+	}
+	return optimal
+}
 
 func main() {
 	if err := start(); err != nil {
@@ -81,12 +97,15 @@ func usage() {
 		flag.PrintDefaults()
 	}
 
-	flag.StringVar(&targetHost, "h", "", "Hostname with or without port")
+	flag.StringVar(&targetHost, "h", "", "Hostname with or without port. Input file specified with `-i` will be ignored.")
 	flag.StringVar(&targetPort, "p", "443", "Port")
-	flag.IntVar(&warnDays, "w", 20, "Warn if the expiration falls within specified days.")
-	flag.IntVar(&alertDays, "a", 10, "Alert if the expiration falls within specified days.")
+	flag.IntVar(&warnDays, "w", 20, "Warn if the certificate expiration is less than specified days but has enough time not to be alerted.")
+	flag.IntVar(&alertDays, "a", 10, "Alert if the certificate expiration is less than specified days.")
 	flag.StringVar(&inputFile, "i", "host.csv", "CSV file containing host information.")
-	flag.StringVar(&resultFile, "o", "result.csv", "Result from the scan.")
+	flag.StringVar(&resultFile, "o", "result.csv", "Output file name.")
+	flag.IntVar(&maxWorkers, "workers", calculateOptimalWorkers(), "Maximum number of concurrent workers")
+	flag.IntVar(&timeout, "timeout", 3000, "Connection timeout in milliseconds")
+	flag.IntVar(&batchSize, "batch", 100, "Batch size for processing large files")
 	flag.Parse()
 }
 
@@ -118,10 +137,13 @@ func process() (r chan ssl.CertificateStatusResult, e error) {
 }
 
 func dispatch(reader io.Reader) (chan ssl.CertificateStatusResult, error) {
-	results := make(chan ssl.CertificateStatusResult)
-	wp := workerpool.New(maxSSLWorkers)
+	results := make(chan ssl.CertificateStatusResult, batchSize)
+	wp := workerpool.New(maxWorkers)
 	var wg sync.WaitGroup
-	sc := ssl.NewSSLConnect(warnDays, alertDays, &wg, wp, results)
+
+	// Create SSL connector with timeout configuration
+	timeoutDuration := time.Duration(timeout) * time.Millisecond
+	sc := ssl.NewSSLConnect(warnDays, alertDays, timeoutDuration, &wg, wp, results)
 
 	cleanup := func() {
 		wg.Wait()
@@ -132,6 +154,8 @@ func dispatch(reader io.Reader) (chan ssl.CertificateStatusResult, error) {
 	r := csv.NewReader(reader)
 	r.Comma = ','
 	r.Comment = '#'
+	r.FieldsPerRecord = -1 // Allow variable number of fields per record
+
 	for {
 		entry, err := r.Read()
 		if err == io.EOF {
@@ -140,12 +164,31 @@ func dispatch(reader io.Reader) (chan ssl.CertificateStatusResult, error) {
 
 		if err != nil {
 			cleanup()
-			return nil, err
+			return nil, fmt.Errorf("CSV parsing error: %w", err)
 		}
+
+		if len(entry) == 0 {
+			continue // Skip empty lines
+		}
+
+		// Derive port with better error handling
+		derivePort := func(record []string) string {
+			if len(record) >= 2 && len(strings.TrimSpace(record[1])) > 0 {
+				return strings.TrimSpace(record[1])
+			}
+			return "443"
+		}
+
 		task := ssl.SSLHost{
-			Host: entry[0],
-			Port: entry[1],
+			Host: strings.TrimSpace(entry[0]),
+			Port: derivePort(entry),
 		}
+
+		// Skip empty hosts
+		if task.Host == "" {
+			continue
+		}
+
 		wg.Add(1)
 		wp.Submit(func() {
 			sc.Connect(task)

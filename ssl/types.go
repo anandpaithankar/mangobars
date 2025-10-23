@@ -17,16 +17,17 @@ const (
 	Valid                    = "Valid"
 )
 
-// CertificateStatusResult ...
+// CertificateStatusResult contains the result of certificate validation
 type CertificateStatusResult struct {
-	Host     string
-	Port     string
-	Subject  string
-	Ca       bool
-	Days     int
-	NotAfter time.Time
-	Status   ExpirationStatus
-	Err      error
+	Host       string
+	Port       string
+	Subject    string
+	Ca         bool
+	Days       int
+	NotAfter   time.Time
+	Status     ExpirationStatus
+	TLSVersion string
+	Err        error
 }
 
 // SSLHost ...
@@ -35,11 +36,13 @@ type SSLHost struct {
 	Port string
 }
 
-// SSLConnect ...
+// SSLConnect handles SSL certificate validation with connection pooling
 type SSLConnect struct {
-	warnDays  int
-	alertDays int
-	wg        *sync.WaitGroup
-	wp        *workerpool.WorkerPool
-	results   chan<- CertificateStatusResult
+	warnDays   int
+	alertDays  int
+	timeout    time.Duration
+	wg         *sync.WaitGroup
+	wp         *workerpool.WorkerPool
+	results    chan<- CertificateStatusResult
+	dialerPool *sync.Pool
 }

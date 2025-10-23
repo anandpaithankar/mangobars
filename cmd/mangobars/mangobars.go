@@ -52,12 +52,6 @@ func calculateOptimalWorkers() int {
 	return optimal
 }
 
-func main() {
-	if err := start(); err != nil {
-		fmt.Fprintf(os.Stderr, "%+v", err)
-		os.Exit(1)
-	}
-}
 
 func start() error {
 	usage()

@@ -39,6 +39,7 @@ var (
 	fw            *writer.FileWriter
 )
 
+<<<<<<< HEAD
 // calculateOptimalWorkers determines the optimal number of workers based on system resources
 func calculateOptimalWorkers() int {
 	numCPU := runtime.NumCPU()
@@ -59,6 +60,8 @@ func main() {
 	}
 }
 
+=======
+>>>>>>> 7f974c4af24e22f51de3d48ddb7a088d2ffd1888
 func start() error {
 	usage()
 
@@ -154,8 +157,12 @@ func dispatch(reader io.Reader) (chan ssl.CertificateStatusResult, error) {
 	r := csv.NewReader(reader)
 	r.Comma = ','
 	r.Comment = '#'
+<<<<<<< HEAD
 	r.FieldsPerRecord = -1 // Allow variable number of fields per record
 
+=======
+	r.FieldsPerRecord = -1 // could have variable number of fields per record
+>>>>>>> 7f974c4af24e22f51de3d48ddb7a088d2ffd1888
 	for {
 		entry, err := r.Read()
 		if err == io.EOF {
@@ -167,6 +174,7 @@ func dispatch(reader io.Reader) (chan ssl.CertificateStatusResult, error) {
 			return nil, fmt.Errorf("CSV parsing error: %w", err)
 		}
 
+<<<<<<< HEAD
 		if len(entry) == 0 {
 			continue // Skip empty lines
 		}
@@ -175,12 +183,26 @@ func dispatch(reader io.Reader) (chan ssl.CertificateStatusResult, error) {
 		derivePort := func(record []string) string {
 			if len(record) >= 2 && len(strings.TrimSpace(record[1])) > 0 {
 				return strings.TrimSpace(record[1])
+=======
+		if len(entry) < 0 {
+			cleanup()
+			return nil, fmt.Errorf("number of fields in the record are less than expected length")
+		}
+
+		derivePort := func(record []string) string {
+			if len(record) == 2 && len(record[1]) != 0 {
+				return record[1]
+>>>>>>> 7f974c4af24e22f51de3d48ddb7a088d2ffd1888
 			}
 			return "443"
 		}
 
 		task := ssl.SSLHost{
+<<<<<<< HEAD
 			Host: strings.TrimSpace(entry[0]),
+=======
+			Host: entry[0],
+>>>>>>> 7f974c4af24e22f51de3d48ddb7a088d2ffd1888
 			Port: derivePort(entry),
 		}
 
@@ -197,4 +219,11 @@ func dispatch(reader io.Reader) (chan ssl.CertificateStatusResult, error) {
 
 	go cleanup()
 	return results, nil
+}
+
+func main() {
+	if err := start(); err != nil {
+		fmt.Fprintf(os.Stderr, "%+v", err)
+		os.Exit(1)
+	}
 }
